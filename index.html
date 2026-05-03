@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deploy Mastery — Deployment Strategies Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #09090b;
+  --surface: #111113;
+  --surface2: #18181b;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f4f4f5;
+  --muted: #71717a;
+  --accent: #22d3ee;
+  --accent2: #818cf8;
+  --green: #4ade80;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --teal: #2dd4bf;
+  --purple: #a78bfa;
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --nav-bg: rgba(9,9,11,0.85);
+}
+
+:root.light {
+  --bg: #f8f8f6;
+  --surface: #ffffff;
+  --surface2: #f1f1ee;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #111113;
+  --muted: #71717a;
+  --accent: #0891b2;
+  --green: #16a34a;
+  --amber: #d97706;
+  --red: #dc2626;
+  --teal: #0d9488;
+  --purple: #7c3aed;
+  --nav-bg: rgba(248,248,246,0.88);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-weight: 300;
+  line-height: 1.7;
+  overflow-x: hidden;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 3rem;
+  height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: background 0.3s, border-color 0.3s;
+}
+.nav-logo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-decoration: none;
+}
+.nav-logo span { color: var(--accent); }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a {
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-badge {
+  font-size: 0.7rem;
+  background: rgba(34,211,238,0.1);
+  color: var(--accent);
+  border: 1px solid rgba(34,211,238,0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+
+/* ── THEME TOGGLE ── */
+.nav-right { display: flex; align-items: center; gap: 1rem; }
+.theme-toggle {
+  position: relative;
+  width: 52px; height: 26px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.theme-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 13px;
+  transition: background 0.3s, border-color 0.3s;
+  display: flex; align-items: center;
+  padding: 0 4px;
+}
+.toggle-track::before {
+  content: '';
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), background 0.3s;
+  transform: translateX(0);
+}
+.theme-toggle input:checked + .toggle-track::before {
+  transform: translateX(26px);
+  background: var(--amber);
+}
+.toggle-icons {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 5px;
+  pointer-events: none;
+}
+.toggle-icon { font-size: 11px; line-height: 1; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex; align-items: center;
+  padding: 8rem 3rem 4rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+}
+.hero-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 70%);
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.hero-content { position: relative; max-width: 900px; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+}
+.hero-eyebrow::before {
+  content: '';
+  width: 24px; height: 1px;
+  background: var(--accent);
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.5rem;
+}
+.hero-title .line2 { color: var(--accent); }
+.hero-sub {
+  font-size: 1rem;
+  color: var(--muted);
+  max-width: 520px;
+  line-height: 1.8;
+  margin-bottom: 2.5rem;
+}
+.hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent);
+  color: #000;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 12px 24px;
+  border-radius: 4px;
+  text-decoration: none;
+  border: none; cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  padding: 12px 24px;
+  border-radius: 4px;
+  border: 1px solid var(--border2);
+  text-decoration: none; cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn-ghost:hover { background: var(--surface); border-color: var(--muted); }
+.hero-stats {
+  display: flex; gap: 3rem;
+  margin-top: 4rem;
+  padding-top: 3rem;
+  border-top: 1px solid var(--border);
+}
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.stat-label { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.05em; }
+
+/* ── SECTION SHELL ── */
+section { padding: 6rem 3rem; }
+.section-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--accent); }
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+  line-height: 1.1;
+}
+.section-sub { color: var(--muted); max-width: 560px; margin-bottom: 3.5rem; font-size: 0.9rem; }
+
+/* ── STRATEGIES GRID ── */
+#strategies { background: var(--surface); }
+.strat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+.strat-card {
+  background: var(--surface);
+  padding: 2rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.strat-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--card-accent, var(--accent));
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+  transform-origin: left;
+}
+.strat-card:hover { background: var(--surface2); }
+.strat-card:hover::after { transform: scaleX(1); }
+.strat-card.active { background: var(--bg); }
+.strat-card.active::after { transform: scaleX(1); }
+.card-num {
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+}
+.card-name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+.card-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; margin-bottom: 1.25rem; }
+.risk-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 2px;
+}
+
+/* ── DETAIL PANEL ── */
+.detail-panel {
+  display: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  margin-top: 1px;
+}
+.detail-panel.open { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.dp-col { padding: 2.5rem; border-right: 1px solid var(--border); }
+.dp-col:last-child { border-right: none; }
+.dp-col h3 {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.dp-list { list-style: none; }
+.dp-list li {
+  font-size: 0.8rem;
+  padding: 6px 0;
+  color: var(--text);
+  display: flex; align-items: flex-start; gap: 10px;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.5;
+}
+.dp-list li:last-child { border-bottom: none; }
+.dp-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.dp-meta { display: flex; flex-direction: column; gap: 12px; }
+.dp-meta-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.dp-meta-row:last-child { border-bottom: none; }
+.dp-meta-key { color: var(--muted); }
+.dp-meta-val { font-weight: 500; }
+.code-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+  font-size: 0.72rem;
+  line-height: 1.8;
+  color: var(--accent);
+  white-space: pre;
+  overflow-x: auto;
+  margin-top: 0.75rem;
+}
+.close-btn {
+  grid-column: 1 / -1;
+  padding: 1rem 2.5rem;
+  display: flex; justify-content: flex-end;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.close-btn button {
+  background: none; border: 1px solid var(--border2);
+  color: var(--muted); font-family: var(--font-mono);
+  font-size: 0.75rem; padding: 6px 16px;
+  border-radius: 2px; cursor: pointer;
+  transition: all 0.2s;
+}
+.close-btn button:hover { border-color: var(--muted); color: var(--text); }
+
+/* ── HLD SECTION ── */
+#hld { background: var(--bg); }
+.hld-list { display: flex; flex-direction: column; gap: 1px; }
+.hld-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1.75rem 2rem;
+  display: grid;
+  grid-template-columns: 200px 1fr auto;
+  align-items: center;
+  gap: 2rem;
+  transition: background 0.2s;
+}
+.hld-row:hover { background: var(--surface2); }
+.hld-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+}
+.hld-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+.fbox {
+  font-size: 0.7rem;
+  font-weight: 400;
+  padding: 5px 12px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text);
+  white-space: nowrap;
+}
+.fbox.live { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.3); color: var(--green); }
+.fbox.new { background: rgba(34,211,238,0.08); border-color: rgba(34,211,238,0.3); color: var(--accent); }
+.fbox.warn { background: rgba(251,191,36,0.08); border-color: rgba(251,191,36,0.3); color: var(--amber); }
+.farr { font-size: 0.8rem; color: var(--muted); padding: 0 6px; }
+.hld-tag {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+/* ── LLD SECTION ── */
+#lld { background: var(--surface); }
+.lld-tabs { display: flex; gap: 0; border: 1px solid var(--border); margin-bottom: 0; overflow-x: auto; }
+.lld-tab {
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.lld-tab:hover { color: var(--text); background: var(--surface2); }
+.lld-tab.on { color: var(--accent); background: var(--bg); border-bottom: 2px solid var(--accent); }
+.lld-panels { border: 1px solid var(--border); border-top: none; }
+.lld-panel { display: none; padding: 2rem; }
+.lld-panel.on { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.lld-block h4 {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+
+/* ── COMPARE ── */
+#compare { background: var(--bg); }
+.cmp-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+thead tr { background: var(--surface); border-bottom: 2px solid var(--border2); }
+th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+  line-height: 1.5;
+}
+tbody tr { transition: background 0.15s; }
+tbody tr:hover { background: var(--surface); }
+.pill {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+.pill-g { background: rgba(74,222,128,0.12); color: var(--green); }
+.pill-r { background: rgba(248,113,113,0.12); color: var(--red); }
+.pill-a { background: rgba(251,191,36,0.12); color: var(--amber); }
+.pill-b { background: rgba(34,211,238,0.12); color: var(--accent); }
+.pill-p { background: rgba(167,139,250,0.12); color: var(--purple); }
+.strat-name-td { font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; }
+
+/* ── Q&A ── */
+#qa { background: var(--surface); }
+.qa-grid { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); }
+.qa-item { background: var(--surface); }
+.qa-q {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.5rem 2rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  gap: 1.5rem;
+}
+.qa-q:hover { background: var(--surface2); }
+.qa-q-text { font-size: 0.9rem; font-weight: 400; line-height: 1.5; flex: 1; }
+.qa-icon {
+  width: 28px; height: 28px;
+  border: 1px solid var(--border2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  color: var(--muted);
+  transition: all 0.2s;
+}
+.qa-item.open .qa-icon { background: var(--accent); border-color: var(--accent); color: #000; transform: rotate(45deg); }
+.qa-a {
+  display: none;
+  padding: 0 2rem 1.5rem 2rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.8;
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+}
+.qa-item.open .qa-a { display: block; }
+.qa-a strong { color: var(--text); font-weight: 500; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 3rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-logo { font-family: var(--font-display); font-size: 1rem; font-weight: 800; }
+.footer-logo span { color: var(--accent); }
+.footer-text { font-size: 0.72rem; color: var(--muted); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { opacity: 0; animation: fadeUp 0.7s ease forwards; }
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.6s; }
+
+@media (max-width: 768px) {
+  nav { padding: 0 1.5rem; }
+  .nav-links { display: none; }
+  section { padding: 4rem 1.5rem; }
+  .hero { padding: 7rem 1.5rem 3rem; }
+  .hero-stats { flex-wrap: wrap; gap: 1.5rem; }
+  .detail-panel.open { grid-template-columns: 1fr; }
+  .hld-row { grid-template-columns: 1fr; gap: 1rem; }
+  .lld-panel.on { grid-template-columns: 1fr; }
+  footer { flex-direction: column; gap: 1rem; text-align: center; }
+}
+
+/* ── LIGHT MODE OVERRIDES ── */
+:root.light .hero-grid {
+  background-image:
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+:root.light .hero-glow {
+  background: radial-gradient(circle, rgba(8,145,178,0.08) 0%, transparent 70%);
+}
+:root.light .code-block {
+  background: #f0f0ed;
+  color: #0891b2;
+  border-color: rgba(0,0,0,0.1);
+}
+:root.light .strat-card { background: #ffffff; }
+:root.light .strat-card:hover { background: #f8f8f6; }
+:root.light .strat-card.active { background: #f8f8f6; }
+:root.light .dp-col { background: #ffffff; }
+:root.light .close-btn { background: #f1f1ee; }
+:root.light thead tr { background: #f1f1ee; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">Deploy<span>Mastery</span></a>
+  <ul class="nav-links">
+    <li><a href="#strategies">Strategies</a></li>
+    <li><a href="#hld">HLD</a></li>
+    <li><a href="#lld">LLD</a></li>
+    <li><a href="#compare">Compare</a></li>
+    <li><a href="#qa">Interview Q&A</a></li>
+  </ul>
+  <div class="nav-right">
+    <span class="nav-badge">Interview Guide</span>
+    <label class="theme-toggle" title="Toggle light/dark mode">
+      <input type="checkbox" id="theme-chk" onchange="toggleTheme(this.checked)">
+      <span class="toggle-track"></span>
+      <span class="toggle-icons">
+        <span class="toggle-icon">🌙</span>
+        <span class="toggle-icon">☀️</span>
+      </span>
+    </label>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero" id="home">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow fade-up">System Design · Deployment</div>
+    <h1 class="hero-title fade-up delay-1">
+      Ship without<br><span class="line2">fear.</span>
+    </h1>
+    <p class="hero-sub fade-up delay-2">
+      Every deployment strategy explained — with high-level architecture, low-level implementation, and interview-ready answers. From Big Bang to Canary.
+    </p>
+    <div class="hero-ctas fade-up delay-3">
+      <a href="#strategies" class="btn-primary">Explore strategies →</a>
+      <a href="#qa" class="btn-ghost">Interview prep</a>
+    </div>
+    <div class="hero-stats fade-up delay-5">
+      <div>
+        <div class="stat-num">6</div>
+        <div class="stat-label">Strategies covered</div>
+      </div>
+      <div>
+        <div class="stat-num">HLD</div>
+        <div class="stat-label">Architecture diagrams</div>
+      </div>
+      <div>
+        <div class="stat-num">LLD</div>
+        <div class="stat-label">Code-level configs</div>
+      </div>
+      <div>
+        <div class="stat-num">8</div>
+        <div class="stat-label">Interview questions</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STRATEGIES ── -->
+<section id="strategies">
+  <div class="section-eyebrow">01 — Strategies</div>
+  <h2 class="section-title">Six deployment patterns,<br>deeply explained.</h2>
+  <p class="section-sub">Click any card to expand full HLD flow, trade-offs, and LLD implementation details.</p>
+  <div class="strat-grid" id="sgrid"></div>
+  <div class="detail-panel" id="dpanel">
+    <div class="dp-col" id="dp-pros"></div>
+    <div class="dp-col" id="dp-cons"></div>
+    <div class="dp-col" id="dp-meta"></div>
+    <div class="close-btn"><button onclick="closeDetail()">Close ✕</button></div>
+  </div>
+</section>
+
+<!-- ── HLD ── -->
+<section id="hld">
+  <div class="section-eyebrow">02 — High-Level Design</div>
+  <h2 class="section-title">Traffic flow<br>topology.</h2>
+  <p class="section-sub">How each strategy routes traffic from your load balancer through to full deployment.</p>
+  <div class="hld-list" id="hlist"></div>
+</section>
+
+<!-- ── LLD ── -->
+<section id="lld">
+  <div class="section-eyebrow">03 — Low-Level Design</div>
+  <h2 class="section-title">Implementation<br>specifics.</h2>
+  <p class="section-sub">Actual config files, Kubernetes manifests, Istio rules, and tooling commands for each strategy.</p>
+  <div class="lld-tabs" id="ltabs"></div>
+  <div class="lld-panels" id="lpanels"></div>
+</section>
+
+<!-- ── COMPARE ── -->
+<section id="compare">
+  <div class="section-eyebrow">04 — Comparison</div>
+  <h2 class="section-title">Side-by-side<br>trade-offs.</h2>
+  <p class="section-sub">At a glance — downtime risk, rollback speed, infra cost, and ideal use case.</p>
+  <div class="cmp-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Strategy</th>
+          <th>Downtime</th>
+          <th>Rollback</th>
+          <th>Infra cost</th>
+          <th>Risk</th>
+          <th>Best for</th>
+        </tr>
+      </thead>
+      <tbody id="ctbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Q&A ── -->
+<section id="qa">
+  <div class="section-eyebrow">05 — Interview Prep</div>
+  <h2 class="section-title">Questions they<br>will ask.</h2>
+  <p class="section-sub">Eight common system design interview questions on deployment — with full model answers.</p>
+  <div class="qa-grid" id="qgrid"></div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-logo">Deploy<span>Mastery</span></div>
+  <div class="footer-text">System design interview guide · Deployment strategies</div>
+  <div class="footer-text" style="font-size:0.65rem; opacity:0.5">HLD · LLD · Interview prep</div>
+</footer>
+
+<script>
+const STRATS = [
+  {
+    id:'bb', col:'red', accent:'#f87171',
+    tag:'High risk', tagStyle:'pill-r',
+    num:'01', name:'Big Bang / Recreate',
+    desc:'Terminate the old version entirely, then deploy the new one. Downtime is guaranteed.',
+    pros:['Simplest strategy to implement and reason about','No concern about running two app versions simultaneously','Lowest infrastructure cost — no extra environments needed'],
+    cons:['Full downtime window — all users are affected','Rollback requires a full re-deploy of the old version','Every user is exposed immediately if the new version has bugs'],
+    hld:[{t:'Old instances',c:'warn'},{t:'→'},{t:'Terminate all',c:''},{t:'→'},{t:'Deploy v2',c:'new'},{t:'→'},{t:'Resume traffic',c:'live'}],
+    when:'Dev/staging environments, overnight batch systems, non-critical internal tools',
+    rollback:'Slow (full re-deploy)', cost:'Low', risk:'Critical',
+    lldTitle:'K8s / Docker commands',
+    lld1:`# Kubernetes\nkubectl rollout restart deployment/my-app\n\n# Docker Compose\ndocker compose down\ndocker compose up -d\n\n# Systemd\nsystemctl restart my-app`,
+    lld2:`# Verify pod status\nkubectl get pods -w\n\n# Check rollout\nkubectl rollout status deploy/my-app\n\n# Check logs\nkubectl logs -l app=my-app --tail=50`
+  },
+  {
+    id:'roll', col:'amber', accent:'#fbbf24',
+    tag:'Medium risk', tagStyle:'pill-a',
+    num:'02', name:'Rolling Update',
+    desc:'Replace instances gradually — a batch at a time. Zero downtime when health checks are configured.',
+    pros:['No additional infrastructure required','Zero downtime achievable with proper health checks','Native support in Kubernetes via RollingUpdate strategy'],
+    cons:['Two versions run simultaneously during the rollout','DB schema must be backward-compatible with both versions','Rollback mid-roll is complex and may create inconsistency'],
+    hld:[{t:'LB',c:''},{t:'→'},{t:'v1 pods (75%)',c:'live'},{t:'+'},{t:'v2 pods (25%)',c:'new'},{t:'→ scale →'},{t:'All v2',c:'live'}],
+    when:'Stateless microservices, APIs with backward-compatible changes',
+    rollback:'Medium (kubectl rollout undo)', cost:'Low', risk:'Medium',
+    lldTitle:'Kubernetes manifest',
+    lld1:`spec:\n  replicas: 4\n  strategy:\n    type: RollingUpdate\n    rollingUpdate:\n      maxUnavailable: 1\n      maxSurge: 1\n  template:\n    spec:\n      containers:\n      - name: app\n        image: myapp:v2\n        readinessProbe:\n          httpGet:\n            path: /health\n            port: 8080\n          initialDelaySeconds: 10`,
+    lld2:`# Rollback command\nkubectl rollout undo deployment/my-app\n\n# Rollback to specific revision\nkubectl rollout undo deployment/my-app \\\n  --to-revision=2\n\n# View rollout history\nkubectl rollout history deployment/my-app`
+  },
+  {
+    id:'bg', col:'green', accent:'#4ade80',
+    tag:'Low risk', tagStyle:'pill-g',
+    num:'03', name:'Blue-Green',
+    desc:'Two identical environments. Atomically switch all traffic from blue (live) to green (new).',
+    pros:['Instant rollback — just flip the load balancer back to blue','Zero downtime — green is fully tested before any traffic hits it','Green environment allows full smoke testing before switching'],
+    cons:['Requires 2× infrastructure cost at all times','Database state sync between environments is complex','Stateful sessions (WebSocket) can be disrupted on switch'],
+    hld:[{t:'LB',c:''},{t:'→'},{t:'Blue v1 (live)',c:'live'},{t:'|'},{t:'Green v2 (ready)',c:'new'},{t:'→ flip →'},{t:'Green (live)',c:'live'}],
+    when:'Production services needing guaranteed fast rollback, regulated industries, financial services',
+    rollback:'Instant (LB rule flip)', cost:'High (2× infra)', risk:'Low',
+    lldTitle:'AWS ALB + K8s service selector',
+    lld1:`# K8s: swap service selector\nkubectl patch service my-app \\\n  -p '{"spec":{"selector":{"version":"green"}}}'\n\n# AWS ALB listener rule (Terraform)\nresource "aws_lb_listener_rule" "main" {\n  actions {\n    type             = "forward"\n    target_group_arn = aws_lb_target_group.green.arn\n  }\n}`,
+    lld2:`# Nginx upstream swap\nupstream backend {\n  # server app-blue:8080;  # previously live\n  server app-green:8080;  # now live\n}\n\n# Reload without downtime\nnginx -s reload\n\n# Rollback: swap back and reload\n# server app-blue:8080;`
+  },
+  {
+    id:'can', col:'teal', accent:'#2dd4bf',
+    tag:'Low risk', tagStyle:'pill-b',
+    num:'04', name:'Canary',
+    desc:'Route a small percentage of users to the new version, monitor metrics, then gradually increase.',
+    pros:['Real production traffic validates the new version','Minimal blast radius — only a small % of users see bugs','Data-driven promotion based on actual error/latency metrics'],
+    cons:['Complex traffic splitting setup (service mesh or smart LB)','Requires robust monitoring and automated promotion/rollback gates','Full rollout is slower than blue-green or big bang'],
+    hld:[{t:'LB',c:''},{t:'→'},{t:'v1 (95%)',c:'live'},{t:'+'},{t:'v2 canary (5%)',c:'new'},{t:'→ promote →'},{t:'v2 (100%)',c:'live'}],
+    when:'High-traffic consumer products, ML model rollouts, A/B testing, SaaS features',
+    rollback:'Fast (reweight to 0%)', cost:'Medium', risk:'Very low',
+    lldTitle:'Istio VirtualService + Argo Rollouts',
+    lld1:`# Istio VirtualService\napiVersion: networking.istio.io/v1alpha3\nkind: VirtualService\nspec:\n  http:\n  - route:\n    - destination:\n        host: my-app\n        subset: v1\n      weight: 95\n    - destination:\n        host: my-app\n        subset: v2\n      weight: 5`,
+    lld2:`# Argo Rollouts canary spec\nspec:\n  strategy:\n    canary:\n      steps:\n      - setWeight: 5\n      - pause: {duration: 10m}\n      - setWeight: 25\n      - analysis:\n          templates:\n          - templateName: error-rate\n      - setWeight: 100\n      canaryService: my-app-canary\n      stableService: my-app-stable`
+  },
+  {
+    id:'shad', col:'purple', accent:'#a78bfa',
+    tag:'Experimental', tagStyle:'pill-p',
+    num:'05', name:'Shadow / Dark Launch',
+    desc:'Mirror 100% of production traffic to new version silently. Responses discarded, users unaffected.',
+    pros:['Zero user impact — the shadow receives traffic but never serves responses','Real-world load testing at actual production scale','No rollback needed — the shadow is never in the critical path'],
+    cons:['Requires 2× infra cost to run the shadow environment','Side-effects (DB writes, emails, payments) must be suppressed in shadow','Complex observability setup to compare shadow vs. live responses'],
+    hld:[{t:'Request',c:''},{t:'→'},{t:'v1 (serves)',c:'live'},{t:'+ mirror'},{t:'v2 (silent)',c:'new'},{t:'→'},{t:'Compare logs',c:''}],
+    when:'Critical service rewrites, ML model validation, compliance testing, load simulation',
+    rollback:'N/A — users unaffected', cost:'High', risk:'None',
+    lldTitle:'Istio traffic mirroring',
+    lld1:`# Istio mirror config\napiVersion: networking.istio.io/v1alpha3\nkind: VirtualService\nspec:\n  http:\n  - route:\n    - destination:\n        host: my-app-v1\n        port:\n          number: 8080\n    mirror:\n      host: my-app-v2\n      port:\n        number: 8080\n    mirrorPercentage:\n      value: 100.0`,
+    lld2:`# Suppress side-effects in shadow\n# Set env var to disable writes\nAPP_SHADOW_MODE=true\n\n# Or use feature flag in code\nif os.getenv('SHADOW_MODE'):\n    return  # skip DB write, email\n\n# Nginx mirror module\nlocation / {\n  mirror /mirror;\n  proxy_pass http://app-v1;\n}\nlocation /mirror {\n  internal;\n  proxy_pass http://app-v2;\n}`
+  },
+  {
+    id:'ff', col:'blue', accent:'#22d3ee',
+    tag:'Code-level', tagStyle:'pill-b',
+    num:'06', name:'Feature Flags',
+    desc:'Deploy code dark, enable features per user or segment at runtime via a flag evaluation service.',
+    pros:['Decouple code deployment from feature release — ship anytime','Instant on/off per user, cohort, or percentage without a redeploy','Enable gradual rollout without infrastructure changes'],
+    cons:['Flag debt accumulates over time — old flags must be cleaned up','Testing all flag combinations is combinatorially complex','Runtime overhead of flag evaluation on every request'],
+    hld:[{t:'Single deploy',c:'live'},{t:'→'},{t:'Flag service',c:'new'},{t:'→'},{t:'User A: ON',c:'live'},{t:'/'},{t:'User B: OFF',c:'warn'}],
+    when:'Frontend features, multi-tenant SaaS, gradual user rollouts, kill switches',
+    rollback:'Instant (flip flag)', cost:'Low–Medium', risk:'Very low',
+    lldTitle:'LaunchDarkly SDK + Unleash',
+    lld1:`// LaunchDarkly Node.js SDK\nconst ldClient = LaunchDarkly.init(SDK_KEY);\n\nconst user = {\n  key: req.user.id,\n  email: req.user.email,\n  custom: { plan: 'enterprise' }\n};\n\nconst showFeature = await ldClient.variation(\n  'new-checkout-flow',\n  user,\n  false  // default value\n);\n\nif (showFeature) renderNewCheckout();`,
+    lld2:`# Unleash self-hosted config\n# docker-compose.yml\nservices:\n  unleash:\n    image: unleashorg/unleash-server\n    environment:\n      DATABASE_URL: postgres://...\n      SECRET: my-secret\n    ports:\n      - "4242:4242"\n\n# Gradual rollout strategy\n# strategy: gradualRolloutUserId\n# percentage: 5  → 25 → 100`
+  }
+];
+
+const QNA = [
+  {
+    q:'What is the difference between blue-green and canary deployment?',
+    a:'<strong>Blue-green</strong> swaps 100% of traffic atomically between two identical environments — instant cutover, instant rollback by flipping the load balancer back. <strong>Canary</strong> routes a small percentage (e.g. 5%) to the new version first, then gradually increases to 100% based on metric gates. Blue-green is faster to roll back; canary has a much smaller blast radius if something goes wrong. Choose blue-green when you need speed and certainty; choose canary when you want real-user validation with minimal risk.'
+  },
+  {
+    q:'How do you handle database migrations during a zero-downtime deployment?',
+    a:'Use the <strong>expand-contract (parallel change) pattern</strong>: (1) <strong>Expand</strong> — add new columns/tables while old code still works fine. (2) <strong>Migrate</strong> — deploy the new app version that reads/writes both old and new schema simultaneously. (3) <strong>Contract</strong> — once the old version is fully gone, remove old columns or tables. Critically, never DROP or RENAME in the same deployment as your code change. Tools like <strong>Flyway</strong> and <strong>Liquibase</strong> manage versioned migration scripts. For non-nullable column additions, add with a default first, then remove the default after migration.'
+  },
+  {
+    q:'How would you design a canary deployment system from scratch?',
+    a:'<strong>HLD:</strong> A service mesh (Istio/Linkerd) or smart load balancer (ALB weighted target groups) performs weighted traffic splitting. A metrics pipeline (Prometheus + Grafana) monitors error rate, p99 latency, throughput, and business KPIs. An analysis engine (Argo Rollouts AnalysisTemplate or a custom service) auto-promotes or auto-rollbacks based on configurable thresholds. <strong>LLD:</strong> Istio VirtualService with canary/stable DestinationRules, Prometheus queries comparing canary vs. baseline error rates, Slack webhooks on rollback events, and a promotion gate (pause + manual approve OR automated metric gate).'
+  },
+  {
+    q:'When would you NOT use blue-green deployment?',
+    a:'Avoid blue-green when: (1) You cannot afford <strong>2× infrastructure cost</strong> — blue-green requires two full production environments running simultaneously. (2) Your app holds <strong>stateful long-lived connections</strong> like WebSockets or gRPC streams — a cutover severs those connections. (3) Your <strong>DB schema changes are not backward-compatible</strong> and you cannot run the old and new app versions against the same database. (4) Your team lacks tooling to execute the environment flip reliably — a partial flip is worse than a rolling update. In these cases, prefer rolling updates or canary deployments.'
+  },
+  {
+    q:'What metrics do you monitor during a canary release?',
+    a:'Golden signals: <strong>error rate</strong> (5xx ÷ total requests, compared canary vs. baseline), <strong>latency</strong> (p50, p95, p99 — watch for tail latency regressions), <strong>throughput</strong> (requests per second — sudden drops can indicate failures), <strong>saturation</strong> (CPU and memory usage of the canary pods). Business metrics: <strong>conversion rate, checkout success rate, add-to-cart events</strong> — comparing cohorts. Also monitor <strong>downstream service SLOs</strong> since a new version may change call patterns. Set automated rollback gates: if error rate exceeds baseline by more than 0.5%, roll back immediately.'
+  },
+  {
+    q:'How do feature flags differ from canary deployments architecturally?',
+    a:'<strong>Canary is infrastructure-level</strong> — traffic is split at the load balancer or service mesh, and the two versions are completely separate running processes. <strong>Feature flags are code-level</strong> — a single deployed binary checks a runtime flag service to decide which code path to execute. Canary tests infrastructure stability, resource consumption, and API behavior under production load. Feature flags test feature acceptance and UX. They are <strong>complementary</strong>: deploy a new version dark via canary, then light up specific features via flags for specific user segments once the infra stability is confirmed.'
+  },
+  {
+    q:'What is shadow deployment and when is it useful?',
+    a:'Shadow (dark launch) duplicates 100% of production traffic to a new service version in parallel, but <strong>discards its responses</strong> — users never see the new version\'s output. Useful for: <strong>load testing a rewrite</strong> at real-world scale without affecting users, <strong>validating ML model behavior</strong> before serving predictions (compare shadow output to live output), <strong>checking downstream impact</strong> — does the new version hammer your database differently? Critically, side-effects in the shadow path (DB writes, sending emails, charging payments) must be suppressed. Istio\'s <code>mirror</code> directive makes this straightforward at the infrastructure level.'
+  },
+  {
+    q:'Explain rolling deployment vs recreate — when would you choose each?',
+    a:'<strong>Recreate</strong> stops all old instances, then starts new ones — causes a downtime window but is completely simple: no dual-version complexity, no concern about backward compatibility, lowest cognitive overhead. Choose recreate for dev/staging environments, overnight batch jobs, or when your app explicitly cannot run two versions simultaneously (e.g. holding an exclusive DB lock). <strong>Rolling</strong> replaces instances gradually achieving zero downtime, but requires backward-compatible APIs and careful DB migration sequencing since v1 and v2 run simultaneously. Choose rolling for most stateless production microservices as your default zero-downtime strategy when you don\'t need the instant rollback of blue-green.'
+  }
+];
+
+const COMPARE = [
+  {n:'Big Bang',down:'❌ Yes',rb:'Slow',rbc:'pill-r',cost:'Low',cc:'pill-g',risk:'Critical',rc:'pill-r',use:'Dev/staging, batch jobs'},
+  {n:'Rolling',down:'✅ No',rb:'Medium',rbc:'pill-a',cost:'Low',cc:'pill-g',risk:'Medium',rc:'pill-a',use:'Stateless microservices'},
+  {n:'Blue-Green',down:'✅ No',rb:'Instant',rbc:'pill-g',cost:'High (2×)',cc:'pill-r',risk:'Low',rc:'pill-g',use:'Regulated, prod services'},
+  {n:'Canary',down:'✅ No',rb:'Fast',rbc:'pill-g',cost:'Medium',cc:'pill-a',risk:'Very low',rc:'pill-g',use:'High-traffic consumer'},
+  {n:'Shadow',down:'✅ No',rb:'N/A',rbc:'pill-b',cost:'High',cc:'pill-r',risk:'None',rc:'pill-g',use:'Rewrites, ML validation'},
+  {n:'Feature Flags',down:'✅ No',rb:'Instant',rbc:'pill-g',cost:'Low–Med',cc:'pill-a',risk:'Very low',rc:'pill-g',use:'SaaS, gradual rollouts'},
+];
+
+let activeCard = null;
+
+function toggleTheme(isLight) {
+  document.documentElement.classList.toggle('light', isLight);
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+// Restore saved preference
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.classList.add('light');
+    const chk = document.getElementById('theme-chk');
+    if (chk) chk.checked = true;
+  }
+})();
+
+function renderStrategies() {
+  const grid = document.getElementById('sgrid');
+  STRATS.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'strat-card';
+    card.style.setProperty('--card-accent', s.accent);
+    card.id = 'card-' + s.id;
+    card.innerHTML = `
+      <div class="card-num">${s.num}</div>
+      <div class="card-name" style="color:${s.accent}">${s.name}</div>
+      <div class="card-desc">${s.desc}</div>
+      <span class="risk-badge ${s.tagStyle}" style="background:${s.accent}18;color:${s.accent};border:1px solid ${s.accent}33">${s.tag}</span>`;
+    card.onclick = () => openDetail(s, card);
+    grid.appendChild(card);
+  });
+}
+
+function openDetail(s, card) {
+  if (activeCard === card) { closeDetail(); return; }
+  document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  activeCard = card;
+
+  document.getElementById('dp-pros').innerHTML = `
+    <h3>Pros</h3>
+    <ul class="dp-list">${s.pros.map(p=>`<li><span class="dp-dot" style="background:var(--green)"></span>${p}</li>`).join('')}</ul>`;
+
+  document.getElementById('dp-cons').innerHTML = `
+    <h3>Cons</h3>
+    <ul class="dp-list">${s.cons.map(c=>`<li><span class="dp-dot" style="background:var(--red)"></span>${c}</li>`).join('')}</ul>`;
+
+  const flow = s.hld.map(x => {
+    if(['→','|','+','→ flip →','→ promote →','→ scale →','+ mirror','/'].includes(x.t)) return `<span class="farr">${x.t}</span>`;
+    return `<div class="fbox ${x.c||''}">${x.t}</div>`;
+  }).join('');
+
+  document.getElementById('dp-meta').innerHTML = `
+    <h3>Details</h3>
+    <div class="dp-meta">
+      <div class="dp-meta-row"><span class="dp-meta-key">Best for</span><span class="dp-meta-val" style="font-size:0.72rem;text-align:right;max-width:60%">${s.when}</span></div>
+      <div class="dp-meta-row"><span class="dp-meta-key">Rollback</span><span class="dp-meta-val">${s.rollback}</span></div>
+      <div class="dp-meta-row"><span class="dp-meta-key">Infra cost</span><span class="dp-meta-val">${s.cost}</span></div>
+      <div class="dp-meta-row"><span class="dp-meta-key">Risk level</span><span class="dp-meta-val" style="color:${s.accent}">${s.risk}</span></div>
+    </div>
+    <h3 style="margin-top:1.5rem">HLD flow</h3>
+    <div class="flow" style="flex-wrap:wrap;gap:4px;margin-top:0.5rem">${flow}</div>`;
+
+  document.getElementById('dpanel').classList.add('open');
+  document.getElementById('dpanel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeDetail() {
+  document.getElementById('dpanel').classList.remove('open');
+  document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('active'));
+  activeCard = null;
+}
+
+function renderHLD() {
+  const list = document.getElementById('hlist');
+  STRATS.forEach(s => {
+    const flow = s.hld.map(x => {
+      if(['→','|','+','→ flip →','→ promote →','→ scale →','+ mirror','/'].includes(x.t)) return `<span class="farr">${x.t}</span>`;
+      return `<div class="fbox ${x.c||''}">${x.t}</div>`;
+    }).join('');
+    const row = document.createElement('div');
+    row.className = 'hld-row';
+    row.innerHTML = `
+      <div>
+        <div class="hld-name" style="color:${s.accent}">${s.name}</div>
+        <div class="hld-sub">${s.num}</div>
+      </div>
+      <div class="flow-wrap"><div class="flow">${flow}</div></div>
+      <span class="hld-tag ${s.tagStyle}" style="background:${s.accent}18;color:${s.accent};border:1px solid ${s.accent}33">${s.tag}</span>`;
+    list.appendChild(row);
+  });
+}
+
+function renderLLD() {
+  const tabs = document.getElementById('ltabs');
+  const panels = document.getElementById('lpanels');
+  STRATS.forEach((s, i) => {
+    const tab = document.createElement('button');
+    tab.className = 'lld-tab' + (i===0?' on':'');
+    tab.textContent = s.name;
+    tab.onclick = () => {
+      document.querySelectorAll('.lld-tab').forEach(t=>t.classList.remove('on'));
+      document.querySelectorAll('.lld-panel').forEach(p=>p.classList.remove('on'));
+      tab.classList.add('on');
+      document.getElementById('lp-'+s.id).classList.add('on');
+    };
+    tabs.appendChild(tab);
+
+    const panel = document.createElement('div');
+    panel.className = 'lld-panel' + (i===0?' on':'');
+    panel.id = 'lp-' + s.id;
+    panel.innerHTML = `
+      <div class="lld-block">
+        <h4>${s.lldTitle}</h4>
+        <div class="code-block">${s.lld1}</div>
+      </div>
+      <div class="lld-block">
+        <h4>Rollback / verify</h4>
+        <div class="code-block">${s.lld2}</div>
+      </div>`;
+    panels.appendChild(panel);
+  });
+}
+
+function renderCompare() {
+  const tbody = document.getElementById('ctbody');
+  COMPARE.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="strat-name-td">${r.n}</td>
+      <td>${r.down}</td>
+      <td><span class="pill ${r.rbc}">${r.rb}</span></td>
+      <td><span class="pill ${r.cc}">${r.cost}</span></td>
+      <td><span class="pill ${r.rc}">${r.risk}</span></td>
+      <td style="color:var(--muted)">${r.use}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderQA() {
+  const grid = document.getElementById('qgrid');
+  QNA.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'qa-item';
+    div.innerHTML = `
+      <div class="qa-q" onclick="toggleQA(${i})">
+        <span class="qa-q-text">${item.q}</span>
+        <span class="qa-icon">+</span>
+      </div>
+      <div class="qa-a">${item.a}</div>`;
+    grid.appendChild(div);
+  });
+}
+
+function toggleQA(i) {
+  const items = document.querySelectorAll('.qa-item');
+  items[i].classList.toggle('open');
+}
+
+renderStrategies();
+renderHLD();
+renderLLD();
+renderCompare();
+renderQA();
+</script>
+</body>
+</html>
